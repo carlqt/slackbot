@@ -28,3 +28,14 @@ func TodoShow(w http.ResponseWriter, r *http.Request) {
 	todoId := vars["todoId"]
 	fmt.Fprintln(w, "Todo show:", todoId)
 }
+
+func Hi(w http.ResponseWriter, r *http.Request) {
+	token := r.FormValue("token")
+	myToken := "hF5F1iTzGUUFWDI8gnS0JPIy"
+
+	if token != myToken {
+		fmt.Fprint(w, "Invalid Token")
+	} else {
+		fmt.Fprint(w, "hello")
+	}
+}
