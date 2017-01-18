@@ -3,6 +3,7 @@ package slackbot
 import (
 	"fmt"
 	"math/rand"
+	"time"
 )
 
 var advice = [...]string{
@@ -22,6 +23,7 @@ var advice = [...]string{
 }
 
 func BadAdvice() string {
+	rand.Seed(time.Now().Unix())
 	n := rand.Intn(len(advice))
 	return fmt.Sprint(advice[n])
 }
