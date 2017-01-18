@@ -2,11 +2,12 @@ package slackbot
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/schema"
 )
+
+const myToken = "hF5F1iTzGUUFWDI8gnS0JPIy"
 
 type SlashForm struct {
 	Token       string `schema:"token"`
@@ -27,32 +28,51 @@ type SlashResponse struct {
 }
 
 func init() {
-	http.HandleFunc("/hi", Hi)
+	hi := http.HandlerFunc(Hi)
+
+	http.Handle("/hi", AuthHandler(hi))
+	http.HandleFunc("/bad_advice", BadAdviceHanlder)
+}
+
+func AuthHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			form := &SlashForm{}
+			decoder := schema.NewDecoder()
+			r.ParseForm()
+			token := r.FormValue("token")
+
+			err := decoder.Decode(form, r.PostForm)
+			if err != nil {
+				return
+			}
+
+			if token != myToken {
+				w.WriteHeader(404)
+				w.Write([]byte("Invalid Token"))
+			}
+			next.ServeHTTP(w, r)
+		} else {
+			w.WriteHeader(404)
+			w.Write([]byte("bad request"))
+		}
+	})
 }
 
 func Hi(w http.ResponseWriter, r *http.Request) {
 	var response *SlashResponse
-	form := &SlashForm{}
-	decoder := schema.NewDecoder()
-	r.ParseForm()
-
-	err := decoder.Decode(form, r.PostForm)
-	if err != nil {
-		panic(err)
-	}
 	response = &SlashResponse{ResponseType: "in_channel", Text: "This is a greeting"}
 
-	token := r.FormValue("token")
-	myToken := "hF5F1iTzGUUFWDI8gnS0JPIy"
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(response)
+}
+
+func BadAdviceHanlder(w http.ResponseWriter, r *http.Request) {
+	var response *SlashResponse
+	response = &SlashResponse{ResponseType: "in_channel", Text: BadAdvice()}
 
 	w.Header().Set("Content-Type", "application/json")
-
-	if token != myToken {
-		fmt.Fprint(w, "Invalid Token")
-	} else {
-		w.WriteHeader(200)
-
-		// fmt.Fprint(w, "hello")
-		json.NewEncoder(w).Encode(response)
-	}
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(response)
 }
