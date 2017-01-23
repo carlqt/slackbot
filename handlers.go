@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/carlqt/slackbot/tweetbot"
+
 	"github.com/gorilla/schema"
 )
 
@@ -27,54 +29,55 @@ type SlashResponse struct {
 	Text         string `json:"text"`
 }
 
-type TestP struct {
-	Token string
+func TokenHandler(next http.Handler, validToken string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		form := &SlashForm{}
+		decoder := schema.NewDecoder()
+		r.ParseForm()
+		token := r.FormValue("token")
+
+		err := decoder.Decode(form, r.PostForm)
+		if err != nil {
+			w.WriteHeader(404)
+			w.Write([]byte("Invalid Token"))
+			return
+		}
+
+		if token != validToken {
+			w.WriteHeader(404)
+			w.Write([]byte("Invalid Token"))
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
-func Index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome!")
-}
+func Tweet(w http.ResponseWriter, r *http.Request) {
+	defaultResponse := &SlashResponse{ResponseType: "ephemeral", Text: "success"}
 
-func TodoIndex(w http.ResponseWriter, r *http.Request) {
-	todos := Todos{
-		Todo{Name: "Write presentation"},
-		Todo{Name: "Host meetup"},
-	}
-
-	if err := json.NewEncoder(w).Encode(todos); err != nil {
-		panic(err)
-	}
-}
-
-func TodoShow(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	todoId := vars["todoId"]
-	fmt.Fprintln(w, "Todo show:", todoId)
-}
-
-func Hi(w http.ResponseWriter, r *http.Request) {
-	var response *SlashResponse
-	form := &SlashForm{}
-	decoder := schema.NewDecoder()
-	r.ParseForm()
-
-	err := decoder.Decode(form, r.PostForm)
-	if err != nil {
-		panic(err)
-	}
-	response = &SlashResponse{ResponseType: "in_channel", Text: "This is a greeting"}
-
-	token := r.FormValue("token")
-	myToken := "hF5F1iTzGUUFWDI8gnS0JPIy"
+	// prepare to make a slack delayed response
+	responseURL := r.FormValue("response_url")
+	go sendDelayResponse(responseURL)
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(defaultResponse)
+}
 
-	if token != myToken {
-		fmt.Fprint(w, "Invalid Token")
+func sendDelayResponse(url string) {
+	response := &SlashResponse{ResponseType: "in_channel", Text: tweetbot.TweetTCL()}
+	b, _ := json.Marshal(response)
+
+	// send request to slack using given response_url
+	client := &http.Client{}
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(b))
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		log.Println(err)
 	} else {
-		w.WriteHeader(200)
-
-		// fmt.Fprint(w, "hello")
-		json.NewEncoder(w).Encode(response)
+		log.Println("success")
 	}
 }
