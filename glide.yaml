@@ -1,0 +1,4 @@
+package: github.com/carlqt/slackbot
+import:
+- package: github.com/gorilla/mux
+- package: github.com/gorilla/schema

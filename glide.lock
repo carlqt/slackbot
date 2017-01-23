@@ -1,0 +1,10 @@
+hash: 21aaf78df1f30e6b1b0941ea2a4cf06e3a1026c69329902817a56256a61849ec
+updated: 2017-01-23T09:39:15.763722513+08:00
+imports:
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/gorilla/schema
+  version: dfd60678a6033f19803293695dcd30f40ed3cd19
+testImports: []
