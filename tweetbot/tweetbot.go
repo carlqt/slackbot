@@ -76,7 +76,7 @@ func getTweet(userID string, token string) string {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", searchURL, nil)
 	q := req.URL.Query()
-	q.Add("count", "200")
+	q.Add("count", "500")
 	q.Add("exclude_replies", "true")
 	q.Add("user_id", userID)
 	req.URL.RawQuery = q.Encode()
