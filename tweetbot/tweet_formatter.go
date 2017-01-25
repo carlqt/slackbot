@@ -2,6 +2,7 @@ package tweetbot
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 
@@ -25,6 +26,7 @@ func extractGifLink(externalLink string) (imgSrc string) {
 	// visit the link to scrape
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", externalLink, nil)
+	log.Println("Connecting to " + externalLink)
 	resp, _ := client.Do(req)
 	defer resp.Body.Close()
 

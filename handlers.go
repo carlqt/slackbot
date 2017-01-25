@@ -72,6 +72,7 @@ func sendDelayResponse(url string) {
 	client := &http.Client{}
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(b))
 	req.Header.Add("Content-Type", "application/json")
+	log.Println("Connecting to " + url)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 

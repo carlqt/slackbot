@@ -82,6 +82,7 @@ func getTweet(userID string, token string) string {
 	req.URL.RawQuery = q.Encode()
 	req.Header.Add("Authorization", "Bearer "+token)
 
+	log.Println("Connecting to " + searchURL)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
