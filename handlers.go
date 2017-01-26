@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"html/template"
 	"log"
 	"net/http"
 
@@ -29,6 +30,16 @@ type SlashResponse struct {
 	Text         string `json:"text"`
 }
 
+func Index(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("html/index.html") // Parse template file.
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		t.Execute(w, nil) // merge.
+	}
+}
+
 func TokenHandler(next http.Handler, validToken string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		form := &SlashForm{}
@@ -43,7 +54,7 @@ func TokenHandler(next http.Handler, validToken string) http.Handler {
 			return
 		}
 
-		if token != validToken {
+		if token != validToken && r.Method == "POST" {
 			w.WriteHeader(404)
 			w.Write([]byte("Invalid Token"))
 			return
